@@ -30,14 +30,14 @@ async function run() {
 
     // User Registration
     app.post("/api/v1/register", async (req, res) => {
-      const { username, email, password } = req.body;
+      const { username, email, password, imageUrl } = req.body;
 
       // Check if email already exists
       const existingUser = await collection.findOne({ email });
       if (existingUser) {
         return res.status(400).json({
           success: false,
-          message: "User already exist!!!",
+          message: "User already exists!",
         });
       }
 
@@ -45,16 +45,35 @@ async function run() {
       const hashedPassword = await bcrypt.hash(password, 10);
 
       // Insert user into the database
-      await collection.insertOne({
+      const newUser = await collection.insertOne({
         username,
         email,
         password: hashedPassword,
         role: "user",
+        imageUrl:
+          imageUrl ||
+          "https://cdn.pixabay.com/photo/2020/07/01/12/58/icon-5359553_1280.png",
       });
+
+      // Generate JWT token
+      const token = jwt.sign(
+        { email: newUser.email, role: "user" },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: process.env.EXPIRES_IN,
+        }
+      );
 
       res.status(201).json({
         success: true,
         message: "User registered successfully!",
+        accessToken: token,
+        user: {
+          username,
+          email,
+          role: "user",
+          imageUrl: newUser.imageUrl,
+        },
       });
     });
 
@@ -87,6 +106,12 @@ async function run() {
         success: true,
         message: "User successfully logged in!",
         accessToken: token,
+        user: {
+          username: user.username,
+          email: user.email,
+          role: user.role,
+          imageUrl: user.imageUrl || "default-image-url",
+        },
       });
     });
 
