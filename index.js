@@ -110,7 +110,9 @@ async function run() {
           username: user.username,
           email: user.email,
           role: user.role,
-          imageUrl: user.imageUrl || "default-image-url",
+          imageUrl:
+            user.imageUrl ||
+            "https://cdn.pixabay.com/photo/2020/07/01/12/58/icon-5359553_1280.png",
         },
       });
     });
