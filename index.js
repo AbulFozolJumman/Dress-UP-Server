@@ -2,7 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
-const { MongoClient } = require("mongodb");
+const { MongoClient, ObjectId } = require("mongodb");
 const jwt = require("jsonwebtoken");
 
 const app = express();
@@ -27,6 +27,129 @@ async function run() {
 
     const db = client.db("Dress-Up");
     const collection = db.collection("users");
+    const productCollection = db.collection("products");
+
+    // CRUD operations for Product Collection
+
+    // Get all products
+    app.get("/api/v1/products", async (req, res) => {
+      try {
+        const products = await productCollection.find({}).toArray();
+        res.json({
+          success: true,
+          message: "Products retrieved successfully",
+          products,
+        });
+      } catch (error) {
+        res
+          .status(500)
+          .json({ success: false, message: "Failed to get products", error });
+      }
+    });
+
+    // Get a single product by ID
+    app.get("/api/v1/products/:id", async (req, res) => {
+      const { id } = req.params;
+      try {
+        const product = await productCollection.findOne({
+          _id: new ObjectId(id),
+        });
+        if (!product) {
+          return res
+            .status(404)
+            .json({ success: false, message: "Product not found" });
+        }
+        res.json({
+          success: true,
+          message: "Product retrieved successfully",
+          product,
+        });
+      } catch (error) {
+        res
+          .status(500)
+          .json({ success: false, message: "Failed to get product", error });
+      }
+    });
+
+    // Create a new product
+    app.post("/api/v1/products", async (req, res) => {
+      const { image, title, price, ratings, category, description } = req.body;
+      try {
+        const newProduct = {
+          image,
+          title,
+          price,
+          ratings,
+          category,
+          description,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        const result = await productCollection.insertOne(newProduct);
+        res.status(201).json({
+          success: true,
+          message: "Product created successfully",
+          product: result.ops[0],
+        });
+      } catch (error) {
+        res
+          .status(500)
+          .json({ success: false, message: "Failed to create product", error });
+      }
+    });
+
+    // Update a product by ID (PUT)
+    app.put("/api/v1/products/:id", async (req, res) => {
+      const { id } = req.params;
+      const { image, title, price, ratings, category, description } = req.body;
+      try {
+        const updatedProduct = {
+          $set: {
+            image,
+            title,
+            price,
+            ratings,
+            category,
+            description,
+            updatedAt: new Date(),
+          },
+        };
+        const result = await productCollection.updateOne(
+          { _id: new ObjectId(id) },
+          updatedProduct
+        );
+        if (result.matchedCount === 0) {
+          return res
+            .status(404)
+            .json({ success: false, message: "Product not found" });
+        }
+        res.json({ success: true, message: "Product updated successfully" });
+      } catch (error) {
+        res
+          .status(500)
+          .json({ success: false, message: "Failed to update product", error });
+      }
+    });
+
+    // Delete a product by ID
+    app.delete("/api/v1/products/:id", async (req, res) => {
+      const { id } = req.params;
+      try {
+        const result = await productCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+        if (result.deletedCount === 0) {
+          return res
+            .status(404)
+            .json({ success: false, message: "Product not found" });
+        }
+        res.json({ success: true, message: "Product deleted successfully" });
+      } catch (error) {
+        res
+          .status(500)
+          .json({ success: false, message: "Failed to delete product", error });
+      }
+    });
 
     // User Registration
     app.post("/api/v1/register", async (req, res) => {
