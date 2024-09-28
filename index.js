@@ -36,7 +36,7 @@ async function run() {
       try {
         // Extracting query parameters for pagination, category, and sorting
         const { page = 1, category, sort } = req.query;
-        const limit = 9; // 9 products per page
+        const limit = 12; // 12 products per page
         const skip = (page - 1) * limit;
 
         // Building the query based on the category filter
