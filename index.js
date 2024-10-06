@@ -139,7 +139,6 @@ async function run() {
             ratings,
             category,
             description,
-            updatedAt: new Date(),
           },
         };
         const result = await productCollection.updateOne(
@@ -151,7 +150,11 @@ async function run() {
             .status(404)
             .json({ success: false, message: "Product not found" });
         }
-        res.json({ success: true, message: "Product updated successfully" });
+        res.json({
+          success: true,
+          message: "Product updated successfully",
+          product: result,
+        });
       } catch (error) {
         res
           .status(500)
