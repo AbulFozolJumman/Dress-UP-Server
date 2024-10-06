@@ -112,14 +112,12 @@ async function run() {
           ratings,
           category,
           description,
-          createdAt: new Date(),
-          updatedAt: new Date(),
         };
         const result = await productCollection.insertOne(newProduct);
         res.status(201).json({
           success: true,
           message: "Product created successfully",
-          product: result.ops[0],
+          product: result,
         });
       } catch (error) {
         res
