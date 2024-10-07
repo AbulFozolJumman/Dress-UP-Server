@@ -35,9 +35,7 @@ async function run() {
     app.get("/api/v1/products", async (req, res) => {
       try {
         // Extracting query parameters for pagination, category, and sorting
-        const { page = 1, category, sort } = req.query;
-        const limit = 12; // 12 products per page
-        const skip = (page - 1) * limit;
+        const { page = 1, limit, category, sort } = req.query;
 
         // Building the query based on the category filter
         const query = {};
@@ -45,16 +43,26 @@ async function run() {
           query.category = category;
         }
 
-        // Sorting option based on the sort query ('asc' for ascending, 'desc' for descending price)
-        const sortOption = sort === "asc" ? { price: 1 } : { price: -1 };
+        // Sorting option based on the sort query
+        let sortOption = {};
+        if (sort) {
+          sortOption = sort === "asc" ? { price: 1 } : { price: -1 };
+        } else {
+          // Default sorting by recently added (assuming you have a field like 'createdAt')
+          sortOption = { createdAt: -1 };
+        }
 
-        // Fetching the filtered, sorted, and paginated products from the collection
-        const products = await productCollection
-          .find(query)
-          .sort(sortOption)
-          .skip(skip)
-          .limit(limit)
-          .toArray();
+        // If limit is provided, use pagination; otherwise, return all products
+        const productQuery = productCollection.find(query).sort(sortOption);
+
+        if (limit) {
+          const parsedLimit = parseInt(limit, 10);
+          const skip = (page - 1) * parsedLimit;
+          productQuery.skip(skip).limit(parsedLimit);
+        }
+
+        // Fetching the products
+        const products = await productQuery.toArray();
 
         // Total number of products for pagination calculation
         const totalProducts = await productCollection.countDocuments(query);
@@ -65,8 +73,8 @@ async function run() {
           message: "Products retrieved successfully",
           products,
           totalProducts,
-          totalPages: Math.ceil(totalProducts / limit),
-          currentPage: parseInt(page),
+          totalPages: limit ? Math.ceil(totalProducts / limit) : 1,
+          currentPage: parseInt(page, 10),
         });
       } catch (error) {
         res.status(500).json({
