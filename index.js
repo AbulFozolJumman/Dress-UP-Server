@@ -212,9 +212,7 @@ async function run() {
         email,
         password: hashedPassword,
         role: "user",
-        imageUrl:
-          imageUrl ||
-          "https://cdn.pixabay.com/photo/2020/07/01/12/58/icon-5359553_1280.png",
+        imageUrl,
       });
 
       // Generate JWT token
@@ -234,7 +232,7 @@ async function run() {
           username,
           email,
           role: "user",
-          imageUrl: newUser.imageUrl,
+          imageUrl,
         },
       });
     });
@@ -272,9 +270,7 @@ async function run() {
           username: user.username,
           email: user.email,
           role: user.role,
-          imageUrl:
-            user.imageUrl ||
-            "https://cdn.pixabay.com/photo/2020/07/01/12/58/icon-5359553_1280.png",
+          imageUrl: user.imageUrl,
         },
       });
     });
